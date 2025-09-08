@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace RP.Core
+namespace RP
 {
     public class RP<T>
     {

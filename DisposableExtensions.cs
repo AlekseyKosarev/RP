@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace RP.Core
+namespace RP
 {
     /// <summary>
     /// Extension for auto-dispose subscriptions in MonoBehaviour.
     /// Usage: subscription.AddTo(this);
     /// </summary>
-    public static class IDisposableExtensions
+    public static class DisposableExtensions
     {
         public static T AddTo<T>(this T disposable, MonoBehaviour behaviour) where T : IDisposable
         {
