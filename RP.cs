@@ -1,54 +1,45 @@
 using System;
-using System.Collections.Generic;
 
 namespace RP
 {
     public class RP<T>
     {
         private T _value;
-        private readonly List<Action<T>> _observers = new();
+        private readonly Func<T, T> _processor;
+        private event Action<T> onChanged;
 
-        public T Value
+        public RP(T initialValue = default, Func<T, T> processor = null)
         {
-            get => _value;
-            set
-            {
-                if (EqualityComparer<T>.Default.Equals(_value, value)) return;
-                _value = value;
-                foreach (var observer in _observers)
-                    observer?.Invoke(value);
-            }
-        }
-
-        public RP(T initialValue)
-        {
+            _processor = processor;
             _value = initialValue;
         }
 
-        public IDisposable Subscribe(Action<T> observer)
+        public event Action<T> OnChanged
         {
-            if (observer == null) throw new ArgumentNullException(nameof(observer));
-
-            _observers.Add(observer);
-            observer(_value); // ← Guaranteed delivery on subscribe!
-            return new Subscription<T>(this, observer);
+            add
+            {
+                onChanged += value;
+                value?.Invoke(_value);
+            }
+            remove => onChanged -= value;
         }
 
-        private class Subscription<TInner> : IDisposable
+        public void Set(T value)
         {
-            private readonly RP<TInner> _property;
-            private readonly Action<TInner> _observer;
-
-            public Subscription(RP<TInner> property, Action<TInner> observer)
+            if (_processor != null)
             {
-                _property = property;
-                _observer = observer;
+                value = _processor(value);
             }
 
-            public void Dispose()
-            {
-                _property?._observers.Remove(_observer);
-            }
+            if (Equals(_value, value))
+                return;
+
+            _value = value;
+            onChanged?.Invoke(value);
         }
+
+        private T Get() => _value;
+    
+        public static implicit operator T(RP<T> property) => property.Get();
     }
 }
